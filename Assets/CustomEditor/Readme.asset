@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9604810d1c616eb44a133b6c0291044c, type: 3}
+  m_Name: Readme
+  m_EditorClassIdentifier: 
+  icon: {fileID: 2800000, guid: 87c8b5e67f4edd24792f6acdce559ca3, type: 3}
+  title: CustomEditor Note
+  sections:
+  - heading: Quick Create Work Folders
+    linkText: 
+    url: 
+    text: 'Selecting Edit/Create Project Folders.
+
+
+      In custom window editor, Add/Remove folder structure in list "Folders".
+
+
+      Choosing "Use Parent Folder" and add "Name Of Parent Folder" to create parent
+      folder of folders.'
+  - heading: Auto Save Scene Before Active Play Mode
+    linkText: 
+    url: 
+    text: Custom editor will auto save scene if it has modifed before enter Play Mode.
+  - heading: Auto Play Scene Index 0 In "Scene In Build"
+    linkText: 
+    url: 
+    text: If project have "Preload" scene to init some app's enviroments, UNCOMMENT
+      lines 38-46 and lines 52-56 in SaveOnRun script.
+  loadedLayout: 1
