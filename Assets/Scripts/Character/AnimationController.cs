@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +8,14 @@ public class AnimationController : MonoBehaviour
     [SerializeField] List<Animator> animObjLst;
 
     int currentActiveAnim = -1;
+
+    #region Observer Of Gun Sound
+    public static event Action PlayShootSound;
+    public static event Action PlayAimSound;
+    public static event Action PlayHolsterSound;
+    public static event Action PlayTakeOutSound;
+    public static event Action PlayReloadSound;
+    #endregion
 
     private void OnEnable()
     {
@@ -47,12 +56,15 @@ public class AnimationController : MonoBehaviour
         {
             animObjLst[currentActiveAnim].SetBool("IsFireContinuous", isFire);
         }
-        
+
+        if (isFire)
+            PlayShootSound?.Invoke();
     }
 
     void ReloadAnim()
     {
         animObjLst[currentActiveAnim].SetTrigger("IsReload");
+        PlayReloadSound?.Invoke();
     }
 
     public void SetCurrentAnimator(WeaponType weaponType)

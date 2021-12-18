@@ -20,11 +20,16 @@ public class BulletBehavior : BulletAndCasing
         ContactPoint contact = collision.GetContact(0);
 
         //Spawn Bullet Imapct Particle
+        ImpactParticle.SetActive(true);
+        ImpactParticle.transform.position = contact.point;
+        ImpactParticle.transform.forward = contact.normal;
+        ImpactParticle.GetComponent<BulletImpactEffect>().PlayImpactEffectAudio();
 
-        //ImpactParticle.SetActive(true);
-        //ImpactParticle.transform.position = contact.point;
-        //ImpactParticle.transform.forward = contact.normal;
-        //ImpactParticle.transform.rotation = Quaternion.Euler(Vector3.zero);
+        if (collision.transform.CompareTag("Enemy"))
+        {
+            Debug.Log("damage: " + CurrentGun.Damage);
+            collision.gameObject.GetComponent<EnemyController>().Damaged(CurrentGun.Damage);
+        }
 
         Disable();
     }

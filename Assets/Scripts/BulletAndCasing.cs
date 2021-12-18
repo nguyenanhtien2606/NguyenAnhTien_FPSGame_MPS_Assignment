@@ -10,6 +10,12 @@ public class BulletAndCasing : MonoBehaviour
         set;
     }
 
+    public Gun CurrentGun
+    {
+        get;
+        set;
+    }
+
     public void Disable()
     {
         Rb.velocity = Vector3.zero;

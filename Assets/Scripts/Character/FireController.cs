@@ -15,6 +15,8 @@ public class FireController : MonoBehaviour
     WeaponType currentWeaponType;
     WeaponFireType currentWeaponFireType;
 
+    bool isReloading;
+
     #region Enable Observer
     //Change Anim Object
     public static event Action<WeaponType> ChangeAnimatorRuntime;
@@ -32,6 +34,16 @@ public class FireController : MonoBehaviour
         currentGun = new Gun();
         currentGun = gameManager.P_WeaponController.GunLst[0];
         SetCurrentWeapon(currentGun.P_WeaponType, currentGun.P_WeaponFireType);
+    }
+
+    private void OnEnable()
+    {
+        CheckReloadFinish.IsReloadFinish += ReloadFinish;
+    }
+
+    private void OnDisable()
+    {
+        CheckReloadFinish.IsReloadFinish -= ReloadFinish;
     }
 
     private void Update()
@@ -61,7 +73,7 @@ public class FireController : MonoBehaviour
 
         #region Observer
         //Fire
-        if ((lastFireTime + smoothFireDelay) < Time.time)
+        if ((lastFireTime + smoothFireDelay) < Time.time && !isReloading)
         {
             if (currentWeaponFireType == WeaponFireType.Continuous)
             {
@@ -84,6 +96,7 @@ public class FireController : MonoBehaviour
         //Reload
         if (Input.GetButtonDown("Reload"))
         {
+            isReloading = true;
             IsReload?.Invoke();
         }
         #endregion
@@ -98,5 +111,10 @@ public class FireController : MonoBehaviour
         #region Observer Change Anim Object
         ChangeAnimatorRuntime?.Invoke(weaponType);
         #endregion
+    }
+
+    public void ReloadFinish()
+    {
+        isReloading = false;
     }
 }

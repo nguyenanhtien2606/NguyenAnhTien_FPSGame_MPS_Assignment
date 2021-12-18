@@ -17,8 +17,8 @@ public class FireParticleController : MonoBehaviour
     [SerializeField] GameObject casingSpawnPointObj;
 
     #region Observer
-    public static event Action<WeaponType, Transform> SpawnBullet;
-    public static event Action<WeaponType, Transform> SpawnCasing;
+    public static event Action<Gun, Transform> SpawnBullet;
+    public static event Action<Gun, Transform> SpawnCasing;
     #endregion
 
     private void OnEnable()
@@ -31,15 +31,15 @@ public class FireParticleController : MonoBehaviour
         FireController.IsFire -= ActiveGunParticle;
     }
 
-    void ActiveGunParticle(bool isActive, Gun current)
+    void ActiveGunParticle(bool isActive, Gun currentGun)
     {
         ActiveMuzzleParcticle(isActive);
 
         #region Observer
         if (isActive)
         {
-            SpawnBullet?.Invoke(current.P_WeaponType, bulletSpawnPointObj.transform);
-            SpawnCasing?.Invoke(current.P_WeaponType, casingSpawnPointObj.transform);
+            SpawnBullet?.Invoke(currentGun, bulletSpawnPointObj.transform);
+            SpawnCasing?.Invoke(currentGun, casingSpawnPointObj.transform);
         }
         #endregion
     }
