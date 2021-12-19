@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -44,7 +45,10 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        GLOBAL = this;
+        if (GLOBAL == null)
+            GLOBAL = this;
+
+        Time.timeScale = 1;
     }
 
     private void Start()
@@ -57,6 +61,16 @@ public class GameManager : MonoBehaviour
 
         //Update origin UI
         P_UIController.UpdateTargetPointRelease(string.Format("{0}/{1}", targetPointRemain, targetPoints.Count));
+    }
+
+    private void OnEnable()
+    {
+        PlayerController.IsDie += PlayerDied;
+    }
+
+    private void OnDisable()
+    {
+        PlayerController.IsDie -= PlayerDied;
     }
 
     private void Update()
@@ -99,12 +113,34 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("You Win!");
         IsPlaying = false;
+
+        Time.timeScale = 0;
+        P_UIController.DisplayResultPanel("You Win!");
     }
 
     void Lose()
     {
         Debug.Log("You Lose!");
         IsPlaying = false;
+
+        Time.timeScale = 0;
+        P_UIController.DisplayResultPanel("You Lose!");
+    }
+
+    void PlayerDied()
+    {
+        StartCoroutine(C_DelayPlayerDied());
+    }
+
+    IEnumerator C_DelayPlayerDied()
+    {
+        yield return new WaitForSeconds(1);
+        Lose();
+    }
+
+    public void PlayAgain()
+    {
+        SceneManager.LoadScene("Main");
     }
 
     string ConvertTime(float timeSecs)

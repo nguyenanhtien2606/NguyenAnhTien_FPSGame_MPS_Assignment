@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,6 +11,7 @@ public class UIController : MonoBehaviour
     [SerializeField] Text bulletRemain; 
     [SerializeField] Text totalBullet;
     [SerializeField] Image crossHair;
+    [SerializeField] Slider playerHearthSlider;
 
     [Space]
     [SerializeField] Text limitTimeSurvivalTxt;
@@ -17,6 +19,18 @@ public class UIController : MonoBehaviour
 
     [Space]
     [SerializeField] Image targetProcessImg;
+
+    [Header("Result UI")]
+    [SerializeField] GameObject resultPanel;
+    [SerializeField] Text resultTxt;
+
+    [Header("Mobile UI")]
+    [SerializeField] Button mobileKnifeAttackBtn;
+    [SerializeField] Button mobileReloadBtn;
+    [SerializeField] Button mobileSwapWeaponBtn;
+    [SerializeField] Button mobileJumpBtn;
+
+    public static event Action SrpintBtnDown;
 
     private void OnEnable()
     {
@@ -79,5 +93,39 @@ public class UIController : MonoBehaviour
 
         if (isActive)
             targetProcessImg.fillAmount = process;
+    }
+
+    public void SetActiveMobileKnifeAttack(bool isActive)
+    {
+        mobileKnifeAttackBtn.interactable = isActive;
+    }
+
+    public void SetActiveMobileReload(bool isActive)
+    {
+        mobileReloadBtn.interactable = isActive;
+    }
+
+    public void SetActiveMobileSwapWeapon(bool isActive)
+    {
+        mobileSwapWeaponBtn.interactable = isActive;
+    }
+
+    public void SetActiveMobileJump(bool isActive)
+    {
+        mobileJumpBtn.interactable = isActive;
+    }
+
+    public void DisplayResultPanel(string _resultTxt)
+    {
+        resultPanel.SetActive(true);
+        resultTxt.text = _resultTxt;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void UpdatePlayerHearthSlider(float value)
+    {
+        playerHearthSlider.value = value;
     }
 }

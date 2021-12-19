@@ -2382,6 +2382,10 @@ MonoBehaviour:
   - {fileID: 2212224526668512668}
   - {fileID: 2212224526668479548}
   timeToMissTarget: 10
+  itemDrops:
+  - {fileID: 6483586506481985828, guid: d2695c31d757b014581e057be8bfc904, type: 3}
+  - {fileID: 3314416980785015274, guid: 9def71bff86131c49ab269e806f4385d, type: 3}
+  - {fileID: 7827648429995623804, guid: 92d023b43ead63942a0489d359842791, type: 3}
 --- !u!195 &2212224525181165233
 NavMeshAgent:
   m_ObjectHideFlags: 0

@@ -16,10 +16,15 @@ public class MovementController : MonoBehaviour
     [SerializeField] AudioClip walkAudio;
     [SerializeField] AudioClip runAudio;
 
+    [Header("JoyStick")]
+    [SerializeField] FixedJoystick fixedJoystick;
+
     float gravityScale = 5;
 
     float applySpeed;
     bool isRunning;
+
+    bool isJumpTrigger;
 
     bool isGrounded;
     RaycastHit hit;
@@ -29,6 +34,15 @@ public class MovementController : MonoBehaviour
     public static event Action<bool> IsWaking;
     public static event Action<bool> IsRunning;
     #endregion
+
+
+#if UNITY_ANDROID || UNITY_IPHONE
+    //Mobile Input
+    bool mobile_IsSprint;
+    bool mobile_IsJump;
+    bool mobile_IsFire;
+#endif
+
 
     public bool IsCanMove
     {
@@ -49,8 +63,13 @@ public class MovementController : MonoBehaviour
     {
         if (IsCanMove)
         {
+#if UNITY_STANDALONE || UNITY_EDITOR
             float h_input = Input.GetAxis("Horizontal");
             float v_input = Input.GetAxis("Vertical");
+#elif UNITY_ANDROID || UNITY_IPHONE
+            float h_input = fixedJoystick.Horizontal;
+            float v_input = fixedJoystick.Vertical;
+#endif
 
             //Get any value of horizontal || vertical input => Move it
             if (h_input != 0 || v_input != 0)
@@ -61,20 +80,43 @@ public class MovementController : MonoBehaviour
             //Check ground
             GroundCheck();
 
-            if (Input.GetButtonDown("Jump") && isGrounded)
+            if (isGrounded)
             {
-                rb.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
-            }
+#if UNITY_STANDALONE
+                if (Input.GetButtonDown("Jump"))
+                {
+                    rb.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
+                }
 
-            if (Input.GetButton("Sprint") && isGrounded)
-            {
-                applySpeed = runSpeed;
-                isRunning = true;
-            }
-            else
-            {
-                applySpeed = walkSpeed;
-                isRunning = false;
+                if (Input.GetButton("Sprint"))
+                {
+                    applySpeed = runSpeed;
+                    isRunning = true;
+                }
+                else
+                {
+                    applySpeed = walkSpeed;
+                    isRunning = false;
+                }
+#elif UNITY_ANDROID || UNITY_IPHONE || UNITY_EDITOR
+                if (mobile_IsJump)
+                {
+                    rb.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
+                    isJumpTrigger = true;
+                    mobile_IsJump = false;
+                }
+
+                if (mobile_IsSprint)
+                {
+                    applySpeed = runSpeed;
+                    isRunning = true;
+                }
+                else
+                {
+                    applySpeed = walkSpeed;
+                    isRunning = false;
+                }
+#endif
             }
 
             IsRunning?.Invoke(v_input > 0 && isRunning); //Hey I'm running - only run forward
@@ -95,6 +137,12 @@ public class MovementController : MonoBehaviour
         Ray ray = new Ray(transform.position, Vector3.down);
         isGrounded = Physics.Raycast(ray, out hit, distanceCheckGround);
         //Debug.DrawRay(transform.position, Vector3.down * distanceCheckGround, Color.red);
+
+        if (isGrounded && isJumpTrigger)
+        {
+            GameManager.GLOBAL.P_UIController.SetActiveMobileJump(true);
+            isJumpTrigger = false;
+        }
     }
 
     void PlayFootStep(bool isPlay)
@@ -112,4 +160,19 @@ public class MovementController : MonoBehaviour
                 audioSource.Pause();
         }
     }
+
+
+#if UNITY_ANDROID || UNITY_IPHONE
+
+    public void SetSprint(bool isSprint)
+    {
+        mobile_IsSprint = isSprint;
+    }
+
+    public void SetJump(bool isJump)
+    {
+        mobile_IsJump = isJump;
+        GameManager.GLOBAL.P_UIController.SetActiveMobileJump(false);
+    }
+#endif
 }

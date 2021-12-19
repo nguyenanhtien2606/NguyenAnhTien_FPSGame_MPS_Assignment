@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +8,8 @@ public class PlayerController : MonoBehaviour
     GameManager gameManager;
 
     public static PlayerController instance;
+
+    CapsuleCollider col;
 
     [SerializeField] Camera gunCam;
     [SerializeField] List<Camera> mainCam;
@@ -18,9 +21,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField] GameObject lookAtPoint;
 
     [Header("Player Settings")]
-    [SerializeField] int PlayerHeath = 100;
+    [SerializeField] float PlayerHeath = 100;
 
     Coroutine c_delayChangeFOV;
+    float maxPlayerHealth;
+
+    public static event Action IsDie;
 
     public GameObject LookAtPoint
     {
@@ -30,7 +36,12 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         gameManager = GameManager.GLOBAL;
-        instance = this;
+
+        if (instance == null)
+            instance = this;
+
+        col = GetComponent<CapsuleCollider>();
+        maxPlayerHealth = PlayerHeath;
     }
 
     private void OnEnable()
@@ -65,15 +76,27 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void Damaged(int damage)
+    public void Damaged(float damage)
     {
         if (PlayerHeath > 0)
         {
+            gameManager.P_UIController.UpdatePlayerHearthSlider((PlayerHeath / maxPlayerHealth) - (damage / maxPlayerHealth));
             PlayerHeath -= damage;
         }
         else
         {
-            //die
+            gunCam.gameObject.SetActive(false);
+            IsDie?.Invoke();
         }
+    }
+
+    public void UpdatePlayerHealth(int amount)
+    {
+        gameManager.P_UIController.UpdatePlayerHearthSlider((PlayerHeath / maxPlayerHealth) + (amount / maxPlayerHealth));
+
+        PlayerHeath += amount;
+
+        if (PlayerHeath > maxPlayerHealth)
+            PlayerHeath = maxPlayerHealth;
     }
 }

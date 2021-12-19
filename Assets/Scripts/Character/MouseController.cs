@@ -16,6 +16,9 @@ public class MouseController : MonoBehaviour
     [SerializeField] float maximumX = 60f;
     [SerializeField] float minimumX = -60f;
 
+    [Space]
+    [SerializeField] FloatingJoystick floatingJoystick;
+
     float rotationX;
 
     public static event Action<float> MouseRotate;
@@ -26,22 +29,32 @@ public class MouseController : MonoBehaviour
         set;
     }
 
+
+
     private void Start()
     {
         IsCanRotate = true;
 
         //Hide and lock the cursor in center screen
+
+#if UNITY_STANDALONE || UNITY_EDITOR
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+#endif
     }
 
     private void Update()
     {
         if (IsCanRotate)
         {
+#if UNITY_STANDALONE || UNITY_EDITOR
             float mouseX = Input.GetAxis("Mouse X") * X_sensitivity * Time.deltaTime;
-
             rotationX += Input.GetAxis("Mouse Y") * Y_sensitivity * Time.deltaTime;
+#elif UNITY_ANDROID || UNITY_IPHONE
+            float mouseX = floatingJoystick.Direction.x * X_sensitivity * Time.deltaTime;
+            rotationX += floatingJoystick.Direction.y * Y_sensitivity * Time.deltaTime;
+#endif
+
             rotationX = Mathf.Clamp(rotationX, minimumX, maximumX);
 
             //Look Up and down with mouse Y input
@@ -51,4 +64,6 @@ public class MouseController : MonoBehaviour
             thePlayer.transform.Rotate(Vector3.up * mouseX);
         }
     }
+
+
 }

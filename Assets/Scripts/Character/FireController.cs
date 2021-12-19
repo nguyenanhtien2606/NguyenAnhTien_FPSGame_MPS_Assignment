@@ -13,6 +13,12 @@ public class FireController : MonoBehaviour
 
     Gun currentGun;
 
+    bool isAimingTrigger;
+    bool isKnifeTrigger;
+    bool isReloadTrigger;
+    bool isSwapTrigger;
+
+
     bool isAiming;
     bool isReloading;
     bool isKnifeAttack;
@@ -48,6 +54,16 @@ public class FireController : MonoBehaviour
     public static event Action<string> UpdateTotalAmmo;
     #endregion
 
+
+#if UNITY_ANDROID || UNITY_IPHONE
+    //Mobile Input
+    bool mobile_IsFire;
+    bool mobile_IsAiming;
+    bool mobile_IsKnife;
+    bool mobile_IsReload;
+    bool mobile_IsSwapWeapon;
+#endif
+
     private void Start()
     {
         gameManager = GameManager.GLOBAL;
@@ -63,6 +79,8 @@ public class FireController : MonoBehaviour
         CheckReloadFinish.IsReloadFinish += ReloadFinish;
         CheckHolsterFinish.IsHolsterFinish += HolsterFinish;
         CheckKnifeAttackFinish.IsKnifeAttackFinish += KnifeAttackFinish;
+
+        ItemDropController.IsTakeItem += TakenItem;
     }
 
     private void OnDisable()
@@ -70,24 +88,29 @@ public class FireController : MonoBehaviour
         CheckReloadFinish.IsReloadFinish -= ReloadFinish;
         CheckHolsterFinish.IsHolsterFinish -= HolsterFinish;
         CheckKnifeAttackFinish.IsKnifeAttackFinish -= KnifeAttackFinish;
+
+        ItemDropController.IsTakeItem -= TakenItem;
     }
 
     private void Update()
     {
         //Change Weapon
-        if (Input.GetKeyDown(KeyCode.Alpha1) && gunChangeIndex != 0 && !isHolster)
+#if UNITY_STANDALONE || UNITY_EDITOR
+
+        if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Alpha2))
+            isSwapTrigger = true;
+
+#elif UNITY_ANDROID || UNITY_IPHONE
+
+        isSwapTrigger = mobile_IsSwapWeapon;
+
+#endif
+        if (isSwapTrigger && !isHolster)
         {
+            isSwapTrigger = mobile_IsSwapWeapon = false;
+
             isHolster = true;
-            gunChangeIndex = 0;
-
-            IsHolster?.Invoke();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha2) && gunChangeIndex != 1 && !isHolster)
-        {
-            isHolster = true;
-            gunChangeIndex = 1;
-
+            gunChangeIndex = (gunChangeIndex != 0) ? 0 : 1;
             IsHolster?.Invoke();
         }
 
@@ -95,6 +118,7 @@ public class FireController : MonoBehaviour
         //Fire
         if (currentGun.CurrentAmmo > 0 && (lastFireTime + smoothFireDelay) < Time.time && !isReloading && !isKnifeAttack)
         {
+#if UNITY_STANDALONE || UNITY_EDITOR
             if (currentGun.P_WeaponFireType == WeaponFireType.Continuous)
             {
                 IsFire?.Invoke(Input.GetButton("Fire1"), currentGun);
@@ -111,29 +135,69 @@ public class FireController : MonoBehaviour
                     ActionWhenFireOneTime();
                 }
             }
+#elif UNITY_ANDROID || UNITY_IPHONE
+            
+            IsFire?.Invoke(mobile_IsFire, currentGun);
+            
+            if (mobile_IsFire)
+            {
+                ActionWhenFireOneTime();
+            }
+#endif
         }
 
         //Aim
+
         if (!isReloading && !isKnifeAttack)
         {
-            if (Input.GetButtonDown("Fire2") && !isAiming && currentGun.CurrentAmmo > 0)
+#if UNITY_STANDALONE || UNITY_EDITOR
+
+            if (Input.GetButtonDown("Fire2"))
+                isAimingTrigger = true;
+            if (Input.GetButtonUp("Fire2"))
+                isAimingTrigger = false;
+
+#elif UNITY_ANDROID || UNITY_IPHONE
+
+            isAimingTrigger = mobile_IsAiming;
+
+#endif
+            if (isAimingTrigger && !isAiming && currentGun.CurrentAmmo > 0)
             {
                 IsAim?.Invoke(true);
                 isAiming = true;
             }
-            if (Input.GetButtonUp("Fire2") && isAiming)
+            if (!isAimingTrigger && isAiming)
             {
                 IsAim?.Invoke(false);
                 isAiming = false;
             }
+
         }
 
         //Change Fire Style when aiming
         currentGun.P_WeaponFireType = isAiming ? WeaponFireType.Continuous : WeaponFireType.Once;
 
+#if UNITY_STANDALONE || UNITY_EDITOR
+        if (Input.GetButtonDown("Reload"))
+            isReloadTrigger = true;
+
+        if (Input.GetButtonDown("KnifeAttack"))
+            isKnifeTrigger = true;
+
+#elif UNITY_ANDROID || UNITY_IPHONE 
+        isReloadTrigger = mobile_IsReload;
+        isKnifeTrigger = mobile_IsKnife;
+#endif
+
         //Reload
-        if (Input.GetButtonDown("Reload") && !isReloading && currentGun.CurrentAmmo < currentGun.MaxAmmo && !isKnifeAttack)
+        gameManager.P_UIController.SetActiveMobileReload(!isReloading && (currentGun.CurrentAmmo < currentGun.MaxAmmo));
+
+        if (isReloadTrigger && !isReloading && currentGun.CurrentAmmo < currentGun.MaxAmmo && !isKnifeAttack)
         {
+            mobile_IsReload = false;
+            isReloadTrigger = false;
+
             if (c_autoReload != null)
                 StopCoroutine(c_autoReload);
 
@@ -141,8 +205,11 @@ public class FireController : MonoBehaviour
         }
 
         //Knife Attack
-        if (Input.GetButtonDown("KnifeAttack") && !isKnifeAttack)
+        if (isKnifeTrigger && !isKnifeAttack)
         {
+            mobile_IsKnife = false;
+            isKnifeTrigger = false;
+
             KnifeAttack();
         }
 
@@ -157,7 +224,7 @@ public class FireController : MonoBehaviour
                 isAiming = false;
             }
         }
-        #endregion
+#endregion
 
     }
 
@@ -178,10 +245,10 @@ public class FireController : MonoBehaviour
             c_autoReload = StartCoroutine(C_AutoReload());
         }
 
-        #region Observer
+#region Observer
         //Update UI
         UpdateCurrentAmmo?.Invoke(currentGun.CurrentAmmo.ToString());
-        #endregion
+#endregion
     }
 
     IEnumerator C_AutoReload()
@@ -224,7 +291,7 @@ public class FireController : MonoBehaviour
         if (currentGun.CurrentAmmo <= 0)
             c_autoReload = StartCoroutine(C_AutoReload());
 
-        #region Observer
+#region Observer
         //Change Anim Object
         ChangeAnimatorRuntime?.Invoke(currentGun.P_WeaponType);
 
@@ -234,6 +301,10 @@ public class FireController : MonoBehaviour
         UpdateCurrentAmmo?.Invoke(currentGun.CurrentAmmo.ToString());
         UpdateTotalAmmo?.Invoke(currentGun.TotalAmmo.ToString());
         #endregion
+
+        gameManager.P_UIController.SetActiveMobileSwapWeapon(true);
+        gameManager.P_UIController.SetActiveMobileKnifeAttack(true);
+        gameManager.P_UIController.SetActiveMobileReload(true);
     }
 
     void ReloadFinish(bool isReloadFinish)
@@ -259,6 +330,8 @@ public class FireController : MonoBehaviour
             UpdateCurrentAmmo?.Invoke(currentGun.CurrentAmmo.ToString());
             UpdateTotalAmmo?.Invoke(currentGun.TotalAmmo.ToString());
         }
+
+        gameManager.P_UIController.SetActiveMobileReload(false);
     }
 
     void HolsterFinish()
@@ -272,5 +345,57 @@ public class FireController : MonoBehaviour
     void KnifeAttackFinish()
     {
         isKnifeAttack = false;
+        gameManager.P_UIController.SetActiveMobileKnifeAttack(true);
     }
+
+    void TakenItem(Item _item)
+    {
+        if (_item.itemType == ItemType.RifleAmmo)
+        {
+            gameManager.P_WeaponController.ResetWeaponAmmo(0, _item.amount);
+        }
+        else if (_item.itemType == ItemType.HandgunAmmo)
+        {
+            gameManager.P_WeaponController.ResetWeaponAmmo(1, _item.amount);
+        }
+        else
+        {
+            PlayerController.instance.UpdatePlayerHealth(_item.amount);
+        }
+
+        UpdateTotalAmmo?.Invoke(currentGun.TotalAmmo.ToString());
+    }
+
+#if UNITY_ANDROID || UNITY_IPHONE
+    public void SetFire(bool isFire)
+    {
+        mobile_IsFire = isFire;
+    }
+
+    public void SetAiming(bool isAim)
+    {
+        mobile_IsAiming = isAim;
+    }
+
+    public void SetKnifeAttack(bool isKnifeAttack)
+    {
+        mobile_IsKnife = isKnifeAttack;
+        gameManager.P_UIController.SetActiveMobileKnifeAttack(false);
+    }
+
+    public void SetReload(bool isReload)
+    {
+        mobile_IsReload = isReload;
+        gameManager.P_UIController.SetActiveMobileReload(false);
+    }
+
+    public void SetSwapWeapon(bool isSwap)
+    {
+        mobile_IsSwapWeapon = isSwap;
+
+        gameManager.P_UIController.SetActiveMobileSwapWeapon(false);
+        gameManager.P_UIController.SetActiveMobileKnifeAttack(false);
+        gameManager.P_UIController.SetActiveMobileReload(false);
+    }
+#endif
 }

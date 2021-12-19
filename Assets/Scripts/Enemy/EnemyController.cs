@@ -13,6 +13,7 @@ public class EnemyController : MonoBehaviour
     [Header("Enemy Settings")]
     [SerializeField] List<GameObject> zombieModels;
     [SerializeField] int timeToMissTarget = 5;
+    [SerializeField] List<GameObject> itemDrops;
 
     float timeDelayToDamage = 0.25f;
     float lastTimeToDamage;
@@ -111,6 +112,13 @@ public class EnemyController : MonoBehaviour
             //die
             ParentSpawnEnemy.SpawnCount -= 1;
             ParentSpawnEnemy.CheckChildLst();
+
+            //Drop Item
+            if (Random.Range(1, 4) == 1)
+            {
+                Instantiate(itemDrops[Random.Range(0, itemDrops.Count)], transform.position, Quaternion.identity);
+            }
+
             Destroy(gameObject);
         }
     }
@@ -153,7 +161,7 @@ public class EnemyController : MonoBehaviour
         {
             if ((lastTimeToDamage + timeDelayToDamage) < Time.time)
             {
-                playerController.Damaged(EnemyHealth);
+                playerController.Damaged(EnemyDamage);
                 lastTimeToDamage = Time.time;
             }
         }

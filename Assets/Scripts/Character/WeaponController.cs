@@ -18,6 +18,14 @@ public class WeaponController: MonoBehaviour
         get { return grenadeLst; }
         set { grenadeLst = value; }
     }
+
+    public void ResetWeaponAmmo(int index, int plusAmount)
+    {
+        GunLst[index].TotalAmmo += plusAmount;
+
+        if (GunLst[index].TotalAmmo > GunLst[index].MaxCarryAmmo)
+            GunLst[index].TotalAmmo = GunLst[index].MaxCarryAmmo;
+    }
 }
 
 [Serializable]
@@ -42,6 +50,7 @@ public class Gun
     [SerializeField] int currentAmmo;
     [SerializeField] int maxAmmo;
     [SerializeField] int totalAmmo;
+    [SerializeField] int maxCarryAmmo;
     [SerializeField] int damage;
     [SerializeField] WeaponType weaponType;
     [SerializeField] WeaponFireType weaponFireType;
@@ -74,6 +83,12 @@ public class Gun
     {
         get { return totalAmmo; }
         set { totalAmmo = value; }
+    }
+
+    public int MaxCarryAmmo
+    {
+        get { return maxCarryAmmo; }
+        set { maxCarryAmmo = value; }
     }
 
     public int Damage
