@@ -6,6 +6,8 @@ public class PlayerController : MonoBehaviour
 {
     GameManager gameManager;
 
+    public static PlayerController instance;
+
     [SerializeField] Camera gunCam;
     [SerializeField] List<Camera> mainCam;
 
@@ -28,6 +30,7 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         gameManager = GameManager.GLOBAL;
+        instance = this;
     }
 
     private void OnEnable()

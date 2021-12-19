@@ -13,10 +13,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] UIController uiController;
 
     [Header("GamePlay")]
-    [SerializeField] List<PlayRound> playRounds;
-    [SerializeField] float limitTimeSurvirval = 300;
+    [SerializeField] List<TargetReleaseController> targetPoints;
+    [SerializeField] float limitTimeSurvirval = 120;
 
-    float timeLimit;
+    float timeLimitRemain;
+    int targetPointRemain;
 
     public bool IsPlaying
     {
@@ -48,26 +49,62 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        timeLimit = limitTimeSurvirval;
+        timeLimitRemain = limitTimeSurvirval;
+        targetPointRemain = 0;
+        
 
         IsPlaying = true;
+
+        //Update origin UI
+        P_UIController.UpdateTargetPointRelease(string.Format("{0}/{1}", targetPointRemain, targetPoints.Count));
     }
 
     private void Update()
     {
-        if (timeLimit <= 0 || IsGameOver)
+        if (timeLimitRemain <= 0 || IsGameOver)
         {
             IsPlaying = false;
         }
 
         if (IsPlaying)
         {
-            timeLimit -= Time.deltaTime;
-            if (timeLimit <= 0)
-                timeLimit = 0;
+            timeLimitRemain -= Time.deltaTime;
+            if (timeLimitRemain <= 0 && targetPointRemain < targetPoints.Count)
+            {
+                timeLimitRemain = 0;
+                Lose();
+            }
 
-            P_UIController.UpdateLimitTimeSurvival(ConvertTime(timeLimit));
+            P_UIController.UpdateLimitTimeSurvival(ConvertTime(timeLimitRemain));
         }
+    }
+
+    public void UpdateTargetRelease()
+    {
+        targetPointRemain += 1;
+        P_UIController.UpdateTargetPointRelease(string.Format("{0}/{1}", targetPointRemain, targetPoints.Count));
+
+        if (targetPointRemain == targetPoints.Count)
+        {
+            Win();
+        }
+    }
+
+    public void PlusTimeSurvival(float timePlus)
+    {
+        timeLimitRemain += timePlus;
+    }
+
+    void Win()
+    {
+        Debug.Log("You Win!");
+        IsPlaying = false;
+    }
+
+    void Lose()
+    {
+        Debug.Log("You Lose!");
+        IsPlaying = false;
     }
 
     string ConvertTime(float timeSecs)

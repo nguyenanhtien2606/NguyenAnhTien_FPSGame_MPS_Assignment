@@ -11,12 +11,8 @@ public class EnemyController : MonoBehaviour
     Animator anim;
 
     [Header("Enemy Settings")]
-    [SerializeField] int enemyHealth = 100;
-    [SerializeField] int enemyDamage = 10;
-    [SerializeField] int timeToMissTarget = 3;
-
-    [Space]
-    [SerializeField] int enemyPoint = 10;
+    [SerializeField] List<GameObject> zombieModels;
+    [SerializeField] int timeToMissTarget = 5;
 
     float timeDelayToDamage = 0.25f;
     float lastTimeToDamage;
@@ -26,40 +22,71 @@ public class EnemyController : MonoBehaviour
 
     PlayerController playerController;
 
-    Vector3 originPos;
-    bool isReturnOriginPos;
+    public bool IsReturnOriginPos
+    {
+        get;
+        set;
+    }
+
+    public Vector3 OriginPos
+    {
+        get;
+        set;
+    }
 
     public Vector3 Target
     {
         get;
-        private set;
+        set;
     }
 
     public int EnemyHealth
     {
-        get { return enemyHealth; }
-        private set { enemyHealth = value; }
+        get;
+        set;
+    }
+
+    public int EnemyDamage
+    {
+        get;
+        set;
+    }
+
+    public int EnemyPoint
+    {
+        get;
+        set;
+    }
+
+    public SpawnEnemy ParentSpawnEnemy
+    {
+        get;
+        set;
     }
 
     private void Start()
     {
         gameManager = GameManager.GLOBAL;
+        playerController = PlayerController.instance;
+
+        //Random model
+        zombieModels[Random.Range(0, zombieModels.Count)].SetActive(true);
 
         navMeshAgent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
 
-        originPos = gameObject.transform.position;
+        SetRandomSpeed();
+        FollowTarget();
     }
 
     private void Update()
     {
-        if (Target != Vector3.zero)
+        if (!IsDeath && Target != Vector3.zero)
         {
             transform.LookAt(Target);
             transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0); //lock x,z axis
-            FollowTarget();
 
-            if (navMeshAgent.remainingDistance < 0.2f && isReturnOriginPos)
+            if (navMeshAgent.remainingDistance < 0.2f && IsReturnOriginPos)
             {
                 anim.SetBool("IsWaking", false);
             }
@@ -75,11 +102,15 @@ public class EnemyController : MonoBehaviour
         EnemyHealth -= damage;
         if (EnemyHealth > 0)
         {
-            Debug.Log(string.Format("{0} heath reamin: {1}", gameObject.name, enemyHealth));
+            //Debug.Log(string.Format("{0} heath reamin: {1}", gameObject.name, EnemyHealth));
+            Target = playerController.LookAtPoint.transform.position;
+            FollowTarget();
         }
         else
         {
             //die
+            ParentSpawnEnemy.SpawnCount -= 1;
+            ParentSpawnEnemy.CheckChildLst();
             Destroy(gameObject);
         }
     }
@@ -88,12 +119,11 @@ public class EnemyController : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            Debug.Log("I've found you!!!");
+            //Debug.Log("I've found you!!!");
             if (c_missPlayer != null)
                 StopCoroutine(c_missPlayer);
 
-            playerController = other.gameObject.GetComponent<PlayerController>();
-            isReturnOriginPos = false;
+            IsReturnOriginPos = false;
         }
     }
 
@@ -101,10 +131,8 @@ public class EnemyController : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            if (playerController == null)
-                playerController = other.gameObject.GetComponent<PlayerController>();
-
             Target = playerController.LookAtPoint.transform.position;
+            FollowTarget();
         }
     }
 
@@ -125,10 +153,7 @@ public class EnemyController : MonoBehaviour
         {
             if ((lastTimeToDamage + timeDelayToDamage) < Time.time)
             {
-                if (playerController == null)
-                    playerController = collision.gameObject.GetComponent<PlayerController>();
-                
-                playerController.Damaged(enemyDamage);
+                playerController.Damaged(EnemyHealth);
                 lastTimeToDamage = Time.time;
             }
         }
@@ -138,17 +163,19 @@ public class EnemyController : MonoBehaviour
     {
         yield return new WaitForSeconds(timeToMissTarget);
 
-        Debug.Log("Yeah you escaped!");
+        //Debug.Log("Yeah you escaped!");
 
-        Target = originPos;
-        isReturnOriginPos = true;
+        Target = OriginPos;
+        IsReturnOriginPos = true;
     }
 
-    void FollowTarget()
+    public void FollowTarget()
     {
-        if (!IsDeath && Target != null)
-        {
-            navMeshAgent.SetDestination(Target);
-        }
+        navMeshAgent.SetDestination(Target);
+    }
+
+    public void SetRandomSpeed()
+    {
+        navMeshAgent.speed = Random.Range(1, 1.5f);
     }
 }

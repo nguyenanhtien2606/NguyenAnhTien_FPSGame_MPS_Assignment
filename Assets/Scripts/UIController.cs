@@ -68,14 +68,13 @@ public class UIController : MonoBehaviour
         limitTimeSurvivalTxt.text = timeTxt;
     }
 
-    public void UpdateTargetRelease(string timeTxt)
+    public void UpdateTargetPointRelease(string targetCount)
     {
-        targetReleaseTxt.text = timeTxt;
+        targetReleaseTxt.text = targetCount;
     }
 
     void UpdateReleaseTargetProcess(bool isActive, float process)
     {
-        Debug.Log("aaaaaaaaaaaaaaaaaaaaaaa");
         targetProcessImg.gameObject.SetActive(isActive);
 
         if (isActive)

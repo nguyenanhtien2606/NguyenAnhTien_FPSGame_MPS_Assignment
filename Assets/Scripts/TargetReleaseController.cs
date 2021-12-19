@@ -5,12 +5,16 @@ using UnityEngine;
 
 public class TargetReleaseController : MonoBehaviour
 {
+    GameManager gameManager;
+
     [SerializeField] Material lockMar;
     [SerializeField] Material releaseMar;
 
     [SerializeField] GameObject marker;
 
     [SerializeField] float timeNeedToRelease;
+
+    [SerializeField] float timePlus = 10;
 
 
     #region observer
@@ -29,6 +33,7 @@ public class TargetReleaseController : MonoBehaviour
 
     private void Start()
     {
+        gameManager = GameManager.GLOBAL;
         countTime = timeNeedToRelease;
     }
 
@@ -43,7 +48,9 @@ public class TargetReleaseController : MonoBehaviour
             {
                 isReleased = true;
                 marker.GetComponent<MeshRenderer>().material = releaseMar;
-                
+
+                gameManager.UpdateTargetRelease();
+                gameManager.PlusTimeSurvival(timePlus);
             }
 
             UpdateReleaseTargetProcess?.Invoke(true, ReleaseProcess);
