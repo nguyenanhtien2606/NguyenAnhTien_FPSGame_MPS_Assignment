@@ -11,13 +11,19 @@ public class GunAudioManager : MonoBehaviour
     private void OnEnable()
     {
         AnimationController.PlayShootSound += PlayShootAudio;
-        AnimationController.PlayReloadSound += PlayReloadAudio;
+        AnimationController.PlayReloadOutOfAmmoSound += PlayReloadOutOfAmmoAudio;
+        AnimationController.PlayReloadLeftAmmoSound += PlayReloadLeftAmmoAudio;
+        AnimationController.PlayHolsterSound += PlayHolsterAudio;
+        AnimationController.StopReloadAmmoSound += StopAudio;
     }
 
     private void OnDisable()
     {
         AnimationController.PlayShootSound -= PlayShootAudio;
-        AnimationController.PlayReloadSound -= PlayReloadAudio;
+        AnimationController.PlayReloadOutOfAmmoSound -= PlayReloadOutOfAmmoAudio;
+        AnimationController.PlayReloadLeftAmmoSound -= PlayReloadLeftAmmoAudio;
+        AnimationController.PlayHolsterSound -= PlayHolsterAudio;
+        AnimationController.StopReloadAmmoSound -= StopAudio;
     }
 
     void PlayShootAudio()
@@ -40,9 +46,24 @@ public class GunAudioManager : MonoBehaviour
         audioSource.PlayOneShot(audioClipLst.takeOut);
     }
 
-    void PlayReloadAudio()
+    void PlayReloadOutOfAmmoAudio()
     {
-        audioSource.PlayOneShot(audioClipLst.reloading);
+        audioSource.PlayOneShot(audioClipLst.reloading_OutOfAmmo);
+    }
+
+    void PlayReloadLeftAmmoAudio()
+    {
+        audioSource.PlayOneShot(audioClipLst.reloading_LeftAmmo);
+    }
+
+    void PlayThudAudio()
+    {
+        audioSource.PlayOneShot(audioClipLst.thud);
+    }
+
+    void StopAudio()
+    {
+        audioSource.Stop();
     }
 }
 
@@ -54,5 +75,7 @@ public class AudioClipLst
     public AudioClip aim;
     public AudioClip holster;
     public AudioClip takeOut;
-    public AudioClip reloading;
+    public AudioClip reloading_OutOfAmmo;
+    public AudioClip reloading_LeftAmmo;
+    public AudioClip thud;
 }

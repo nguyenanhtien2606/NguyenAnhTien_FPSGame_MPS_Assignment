@@ -12,10 +12,14 @@ public class FireController : MonoBehaviour
     float lastFireTime;
 
     Gun currentGun;
-    WeaponType currentWeaponType;
-    WeaponFireType currentWeaponFireType;
 
+    bool isAiming;
     bool isReloading;
+    bool isKnifeAttack;
+
+    bool isHolster;
+    int gunChangeIndex = 0;
+    Coroutine c_autoReload;
 
     #region Enable Observer
     //Change Anim Object
@@ -23,7 +27,25 @@ public class FireController : MonoBehaviour
 
     //Fire Action
     public static event Action<bool, Gun> IsFire;
-    public static event Action IsReload;
+
+    //Aim Action
+    public static event Action<bool> IsAim;
+
+    //Reload Action
+    public static event Action IsReloadOutOfAmmo;
+    public static event Action IsReloadLeftAmmo;
+
+    //Knife Action
+    public static event Action IsKnifeAttack;
+
+    //Holster
+    public static event Action IsHolster;
+
+    //UI update Action
+    public static event Action<string> UpdateWeaponName;
+    public static event Action<Sprite> UpdateWeaponAvatar;
+    public static event Action<string> UpdateCurrentAmmo;
+    public static event Action<string> UpdateTotalAmmo;
     #endregion
 
     private void Start()
@@ -33,54 +55,52 @@ public class FireController : MonoBehaviour
         //default Weapon
         currentGun = new Gun();
         currentGun = gameManager.P_WeaponController.GunLst[0];
-        SetCurrentWeapon(currentGun.P_WeaponType, currentGun.P_WeaponFireType);
+        SetCurrentWeapon();
     }
 
     private void OnEnable()
     {
         CheckReloadFinish.IsReloadFinish += ReloadFinish;
+        CheckHolsterFinish.IsHolsterFinish += HolsterFinish;
+        CheckKnifeAttackFinish.IsKnifeAttackFinish += KnifeAttackFinish;
     }
 
     private void OnDisable()
     {
         CheckReloadFinish.IsReloadFinish -= ReloadFinish;
+        CheckHolsterFinish.IsHolsterFinish -= HolsterFinish;
+        CheckKnifeAttackFinish.IsKnifeAttackFinish -= KnifeAttackFinish;
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        //Change Weapon
+        if (Input.GetKeyDown(KeyCode.Alpha1) && gunChangeIndex != 0 && !isHolster)
         {
-            currentGun = gameManager.P_WeaponController.GunLst[0];
-            SetCurrentWeapon(currentGun.P_WeaponType, currentGun.P_WeaponFireType);
+            isHolster = true;
+            gunChangeIndex = 0;
+
+            IsHolster?.Invoke();
         }
 
-        if (Input.GetKeyDown(KeyCode.Alpha2))
+        if (Input.GetKeyDown(KeyCode.Alpha2) && gunChangeIndex != 1 && !isHolster)
         {
-            currentGun = gameManager.P_WeaponController.GunLst[1];
-            SetCurrentWeapon(currentGun.P_WeaponType, currentGun.P_WeaponFireType);
-        }
+            isHolster = true;
+            gunChangeIndex = 1;
 
-        //Change Rifle Fire Style
-        if (currentWeaponType == WeaponType.Rifle)
-        {
-            if (Input.GetButtonDown("ChangeFireStyle"))
-            {
-                currentGun.P_WeaponFireType = (currentGun.P_WeaponFireType == WeaponFireType.Continuous) ? WeaponFireType.Once : WeaponFireType.Continuous;
-
-                currentWeaponFireType = currentGun.P_WeaponFireType;
-            }
+            IsHolster?.Invoke();
         }
 
         #region Observer
         //Fire
-        if ((lastFireTime + smoothFireDelay) < Time.time && !isReloading)
+        if (currentGun.CurrentAmmo > 0 && (lastFireTime + smoothFireDelay) < Time.time && !isReloading && !isKnifeAttack)
         {
-            if (currentWeaponFireType == WeaponFireType.Continuous)
+            if (currentGun.P_WeaponFireType == WeaponFireType.Continuous)
             {
                 IsFire?.Invoke(Input.GetButton("Fire1"), currentGun);
                 if (Input.GetButton("Fire1"))
                 {
-                    lastFireTime = Time.time;
+                    ActionWhenFireOneTime();
                 }
             }
             else
@@ -88,33 +108,169 @@ public class FireController : MonoBehaviour
                 IsFire?.Invoke(Input.GetButtonDown("Fire1"), currentGun);
                 if (Input.GetButtonDown("Fire1"))
                 {
-                    lastFireTime = Time.time;
+                    ActionWhenFireOneTime();
                 }
-            }  
+            }
         }
+
+        //Aim
+        if (!isReloading && !isKnifeAttack)
+        {
+            if (Input.GetButtonDown("Fire2") && !isAiming && currentGun.CurrentAmmo > 0)
+            {
+                IsAim?.Invoke(true);
+                isAiming = true;
+            }
+            if (Input.GetButtonUp("Fire2") && isAiming)
+            {
+                IsAim?.Invoke(false);
+                isAiming = false;
+            }
+        }
+
+        //Change Fire Style when aiming
+        currentGun.P_WeaponFireType = isAiming ? WeaponFireType.Continuous : WeaponFireType.Once;
 
         //Reload
-        if (Input.GetButtonDown("Reload"))
+        if (Input.GetButtonDown("Reload") && !isReloading && currentGun.CurrentAmmo < currentGun.MaxAmmo && !isKnifeAttack)
         {
-            isReloading = true;
-            IsReload?.Invoke();
+            if (c_autoReload != null)
+                StopCoroutine(c_autoReload);
+
+            Reload();
+        }
+
+        //Knife Attack
+        if (Input.GetButtonDown("KnifeAttack") && !isKnifeAttack)
+        {
+            KnifeAttack();
+        }
+
+        //Off Fire, Aiming action
+        if (currentGun.CurrentAmmo <= 0 || isReloading || isKnifeAttack)
+        {
+            IsFire?.Invoke(false, currentGun);
+
+            if (isAiming)
+            {
+                IsAim?.Invoke(false);
+                isAiming = false;
+            }
         }
         #endregion
 
     }
 
-    void SetCurrentWeapon(WeaponType weaponType, WeaponFireType weaponFireType)
+    void ActionWhenFireOneTime()
     {
-        currentWeaponType = weaponType;
-        currentWeaponFireType = weaponFireType;
+        //Update Fire moment
+        lastFireTime = Time.time;
 
-        #region Observer Change Anim Object
-        ChangeAnimatorRuntime?.Invoke(weaponType);
+        //Update current ammo remain
+        currentGun.CurrentAmmo -= 1;
+
+        //Auto reload ammo
+        if (currentGun.CurrentAmmo <= 0)
+        {
+            if (c_autoReload != null)
+                StopCoroutine(c_autoReload);
+
+            c_autoReload = StartCoroutine(C_AutoReload());
+        }
+
+        #region Observer
+        //Update UI
+        UpdateCurrentAmmo?.Invoke(currentGun.CurrentAmmo.ToString());
         #endregion
     }
 
-    public void ReloadFinish()
+    IEnumerator C_AutoReload()
+    {
+        yield return new WaitForSeconds(0.5f);
+        Reload();
+    }
+
+    void Reload()
+    {
+        if (currentGun.TotalAmmo == 0)
+        {
+            return;
+        }
+
+        isReloading = true;
+
+        //Anim Action
+        if (currentGun.CurrentAmmo > 0)
+            IsReloadLeftAmmo?.Invoke();
+        else
+            IsReloadOutOfAmmo?.Invoke();
+    }
+
+    void KnifeAttack()
+    {
+        isKnifeAttack = true;
+        IsKnifeAttack?.Invoke();
+    }
+
+    void SetCurrentWeapon()
     {
         isReloading = false;
+
+        //Clear old coroutine
+        if (c_autoReload != null)
+            StopCoroutine(c_autoReload);
+
+        //Auto reload ammo
+        if (currentGun.CurrentAmmo <= 0)
+            c_autoReload = StartCoroutine(C_AutoReload());
+
+        #region Observer
+        //Change Anim Object
+        ChangeAnimatorRuntime?.Invoke(currentGun.P_WeaponType);
+
+        //Update UI
+        UpdateWeaponName?.Invoke(currentGun.GunName);
+        UpdateWeaponAvatar?.Invoke(currentGun.GunAvatar);
+        UpdateCurrentAmmo?.Invoke(currentGun.CurrentAmmo.ToString());
+        UpdateTotalAmmo?.Invoke(currentGun.TotalAmmo.ToString());
+        #endregion
+    }
+
+    void ReloadFinish(bool isReloadFinish)
+    {
+        isReloading = false;
+
+        if (isReloadFinish)
+        {
+            //Update amount Ammo
+            if ((currentGun.TotalAmmo - currentGun.MaxAmmo) > 0)
+            {
+                int amountAmmoPlus = currentGun.MaxAmmo - currentGun.CurrentAmmo;
+                currentGun.CurrentAmmo += amountAmmoPlus;
+                currentGun.TotalAmmo -= amountAmmoPlus;
+            }
+            else
+            {
+                currentGun.CurrentAmmo += currentGun.TotalAmmo;
+                currentGun.TotalAmmo = 0;
+            }
+
+            //Update UI
+            UpdateCurrentAmmo?.Invoke(currentGun.CurrentAmmo.ToString());
+            UpdateTotalAmmo?.Invoke(currentGun.TotalAmmo.ToString());
+        }
+    }
+
+    void HolsterFinish()
+    {
+        isHolster = false;
+        currentGun = gameManager.P_WeaponController.GunLst[gunChangeIndex];
+
+        SetCurrentWeapon();
+    }
+
+    void KnifeAttackFinish()
+    {
+        isKnifeAttack = false;
     }
 }

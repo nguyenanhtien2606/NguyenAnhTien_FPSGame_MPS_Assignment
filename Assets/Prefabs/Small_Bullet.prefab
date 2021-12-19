@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 6201239337493679027}
   - component: {fileID: 193426434631591899}
   - component: {fileID: -4615955180235049012}
+  - component: {fileID: 3791082813080256247}
   m_Layer: 0
   m_Name: Small_Bullet
   m_TagString: Untagged
@@ -218,3 +219,15 @@ TrailRenderer:
   m_MinVertexDistance: 0.1
   m_Autodestruct: 0
   m_Emitting: 1
+--- !u!114 &3791082813080256247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1325836922669442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 435377508326cc54ebab1a79d02b4ebe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

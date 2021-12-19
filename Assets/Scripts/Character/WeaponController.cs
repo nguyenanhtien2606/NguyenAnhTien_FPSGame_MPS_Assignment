@@ -39,11 +39,12 @@ public class Gun
 {
     [SerializeField] string gunName;
     [SerializeField] Sprite gunAvatar;
-    [SerializeField] float maxAmmo;
+    [SerializeField] int currentAmmo;
+    [SerializeField] int maxAmmo;
+    [SerializeField] int totalAmmo;
     [SerializeField] int damage;
     [SerializeField] WeaponType weaponType;
     [SerializeField] WeaponFireType weaponFireType;
-
 
     public string GunName
     {
@@ -57,10 +58,22 @@ public class Gun
         private set { gunAvatar = value; }
     }
 
-    public float MaxAmmo
+    public int CurrentAmmo
+    {
+        get { return currentAmmo; }
+        set { currentAmmo = value; }
+    }
+
+    public int MaxAmmo
     {
         get { return maxAmmo; }
         private set { maxAmmo = value; }
+    }
+
+    public int TotalAmmo
+    {
+        get { return totalAmmo; }
+        set { totalAmmo = value; }
     }
 
     public int Damage

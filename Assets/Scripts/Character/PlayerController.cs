@@ -4,26 +4,43 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] MovementController movementController;
-    [SerializeField] AnimationController animationController;
-    [SerializeField] FireController fireController;
+    [SerializeField] Camera gunCam;
+    [SerializeField] Camera mainCam;
 
+    [SerializeField] int normalFOV;
+    [SerializeField] int aimingFOV;
 
-    public MovementController P_MovementController
+    [Space]
+    [SerializeField] UIController uiController;
+
+    Coroutine c_delayChangeFOV;
+
+    private void OnEnable()
     {
-        get { return movementController; }
-        set { movementController = value; }
+        FireController.IsAim += ChangeFOVAiming;
     }
 
-    public AnimationController P_AnimationController
+    private void OnDisable()
     {
-        get { return animationController; }
-        set { animationController = value; }
+        FireController.IsAim -= ChangeFOVAiming;
     }
 
-    public FireController P_FireController
+    void ChangeFOVAiming(bool isAiming)
     {
-        get { return fireController; }
-        set { fireController = value; }
+        Debug.Log(isAiming);
+        if (c_delayChangeFOV != null)
+            StopCoroutine(c_delayChangeFOV);
+
+        c_delayChangeFOV = StartCoroutine(C_DelayChangeFOV(isAiming));
+        uiController.DisplayCrossHair(!isAiming);
+    }
+
+    IEnumerator C_DelayChangeFOV(bool isAiming)
+    {
+        yield return new WaitForSeconds(0.1f);
+
+        gunCam.fieldOfView = isAiming ? aimingFOV : normalFOV;
+        mainCam.fieldOfView = isAiming ? aimingFOV : normalFOV;
+        
     }
 }

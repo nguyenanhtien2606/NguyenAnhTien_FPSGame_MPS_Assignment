@@ -9,7 +9,24 @@ public class UIController : MonoBehaviour
     [SerializeField] Image weaponAvatar; 
     [SerializeField] Text bulletRemain; 
     [SerializeField] Text totalBullet;
-    
+    [SerializeField] Image crossHair;
+
+    private void OnEnable()
+    {
+        FireController.UpdateWeaponName += UpdateWeaponName;
+        FireController.UpdateWeaponAvatar += UpdateWeaponAvatar;
+        FireController.UpdateCurrentAmmo += UpdateBulletRemain;
+        FireController.UpdateTotalAmmo += UpdateTotalBullet;
+    }
+
+    private void OnDisable()
+    {
+        FireController.UpdateWeaponName -= UpdateWeaponName;
+        FireController.UpdateWeaponAvatar -= UpdateWeaponAvatar;
+        FireController.UpdateCurrentAmmo -= UpdateBulletRemain;
+        FireController.UpdateTotalAmmo -= UpdateTotalBullet;
+    }
+
     public void UpdateWeaponName(string _weaponName)
     {
         weaponName.text = _weaponName;
@@ -20,7 +37,7 @@ public class UIController : MonoBehaviour
         weaponAvatar.sprite = _weaponAvatar;
     }
 
-    public void UpdateBulletReamin(string _bulletRemain)
+    public void UpdateBulletRemain(string _bulletRemain)
     {
         bulletRemain.text = _bulletRemain;
     }
@@ -28,5 +45,10 @@ public class UIController : MonoBehaviour
     public void UpdateTotalBullet(string _totalBullet)
     {
         totalBullet.text = _totalBullet;
+    }
+
+    public void DisplayCrossHair(bool isDisplay)
+    {
+        crossHair.gameObject.SetActive(isDisplay);
     }
 }

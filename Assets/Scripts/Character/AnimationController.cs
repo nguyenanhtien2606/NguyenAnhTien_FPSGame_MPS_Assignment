@@ -14,7 +14,9 @@ public class AnimationController : MonoBehaviour
     public static event Action PlayAimSound;
     public static event Action PlayHolsterSound;
     public static event Action PlayTakeOutSound;
-    public static event Action PlayReloadSound;
+    public static event Action PlayReloadOutOfAmmoSound;
+    public static event Action PlayReloadLeftAmmoSound;
+    public static event Action StopReloadAmmoSound;
     #endregion
 
     private void OnEnable()
@@ -24,7 +26,13 @@ public class AnimationController : MonoBehaviour
 
         FireController.ChangeAnimatorRuntime += SetCurrentAnimator;
         FireController.IsFire += FireAnim;
-        FireController.IsReload += ReloadAnim;
+        FireController.IsAim += AimAnim;
+        FireController.IsReloadOutOfAmmo += ReloadOutOfAmmoAnim;
+        FireController.IsReloadLeftAmmo += ReloadLeftAmmoAnim;
+        FireController.IsHolster += HolsterAnim;
+        FireController.IsKnifeAttack += KnifeAttack;
+
+        CheckReloadFinish.IsReloadFinish += CheckReloadActionFinish;
     }
 
     private void OnDisable()
@@ -34,7 +42,13 @@ public class AnimationController : MonoBehaviour
 
         FireController.ChangeAnimatorRuntime -= SetCurrentAnimator;
         FireController.IsFire -= FireAnim;
-        FireController.IsReload -= ReloadAnim;
+        FireController.IsAim -= AimAnim;
+        FireController.IsReloadOutOfAmmo -= ReloadOutOfAmmoAnim;
+        FireController.IsReloadLeftAmmo -= ReloadLeftAmmoAnim;
+        FireController.IsHolster -= HolsterAnim;
+        FireController.IsKnifeAttack -= KnifeAttack;
+
+        CheckReloadFinish.IsReloadFinish -= CheckReloadActionFinish;
     }
 
     void RunningAnim(bool isRun)
@@ -61,10 +75,40 @@ public class AnimationController : MonoBehaviour
             PlayShootSound?.Invoke();
     }
 
-    void ReloadAnim()
+    void AimAnim(bool isAim)
     {
-        animObjLst[currentActiveAnim].SetTrigger("IsReload");
-        PlayReloadSound?.Invoke();
+        animObjLst[currentActiveAnim].SetBool("IsAim", isAim);
+    }
+
+    void ReloadOutOfAmmoAnim()
+    {
+        animObjLst[currentActiveAnim].SetTrigger("IsReloadOutOfAmmo");
+        PlayReloadOutOfAmmoSound?.Invoke();
+    }
+
+    void ReloadLeftAmmoAnim()
+    {
+        animObjLst[currentActiveAnim].SetTrigger("IsReloadLeftAmmo");
+        PlayReloadLeftAmmoSound?.Invoke();
+    }
+
+    void CheckReloadActionFinish(bool isFinish)
+    {
+        if (!isFinish)
+            StopReloadAmmoSound?.Invoke();
+    }
+
+    void HolsterAnim()
+    {
+        animObjLst[currentActiveAnim].SetTrigger("IsHolster");
+        PlayHolsterSound?.Invoke();
+    }
+
+    void KnifeAttack()
+    {
+        //rnadom attack type
+        animObjLst[currentActiveAnim].SetInteger("KnifeRanNum", UnityEngine.Random.Range(0, 2));
+        animObjLst[currentActiveAnim].SetTrigger("IsKnife");
     }
 
     public void SetCurrentAnimator(WeaponType weaponType)
