@@ -11,6 +11,11 @@ public class UIController : MonoBehaviour
     [SerializeField] Text totalBullet;
     [SerializeField] Image crossHair;
 
+    [Space]
+    [SerializeField] Text limitTimeSurvivalTxt;
+    [SerializeField] Text timeSurvivalRecordTxt;
+    [SerializeField] Text roundTxt;
+
     private void OnEnable()
     {
         FireController.UpdateWeaponName += UpdateWeaponName;
@@ -50,5 +55,20 @@ public class UIController : MonoBehaviour
     public void DisplayCrossHair(bool isDisplay)
     {
         crossHair.gameObject.SetActive(isDisplay);
+    }
+
+    public void UpdateLimitTimeSurvival(string timeTxt)
+    {
+        limitTimeSurvivalTxt.text = timeTxt;
+    }
+
+    public void UpdateTimeSurvivalRecord(string timeTxt)
+    {
+        timeSurvivalRecordTxt.text = timeTxt;
+    }
+
+    public void UpdatePlayingRound(string playingRoundTxt)
+    {
+        roundTxt.text = playingRoundTxt;
     }
 }

@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    GameManager gameManager;
+
     [SerializeField] Camera gunCam;
     [SerializeField] List<Camera> mainCam;
 
@@ -11,9 +13,22 @@ public class PlayerController : MonoBehaviour
     [SerializeField] int aimingFOV;
 
     [Space]
-    [SerializeField] UIController uiController;
+    [SerializeField] GameObject lookAtPoint;
+
+    [Header("Player Settings")]
+    [SerializeField] int PlayerHeath = 100;
 
     Coroutine c_delayChangeFOV;
+
+    public GameObject LookAtPoint
+    {
+        get { return lookAtPoint; }
+    }
+
+    private void Start()
+    {
+        gameManager = GameManager.GLOBAL;
+    }
 
     private void OnEnable()
     {
@@ -31,7 +46,7 @@ public class PlayerController : MonoBehaviour
             StopCoroutine(c_delayChangeFOV);
 
         c_delayChangeFOV = StartCoroutine(C_DelayChangeFOV(isAiming));
-        uiController.DisplayCrossHair(!isAiming);
+        gameManager.P_UIController.DisplayCrossHair(!isAiming);
     }
 
     IEnumerator C_DelayChangeFOV(bool isAiming)
@@ -44,6 +59,18 @@ public class PlayerController : MonoBehaviour
         {
             if (cam.gameObject.activeInHierarchy)
                 cam.fieldOfView = isAiming ? aimingFOV : normalFOV;
+        }
+    }
+
+    public void Damaged(int damage)
+    {
+        if (PlayerHeath > 0)
+        {
+            PlayerHeath -= damage;
+        }
+        else
+        {
+            //die
         }
     }
 }
