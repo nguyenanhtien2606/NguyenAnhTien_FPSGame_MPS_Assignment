@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] Camera gunCam;
-    [SerializeField] Camera mainCam;
+    [SerializeField] List<Camera> mainCam;
 
     [SerializeField] int normalFOV;
     [SerializeField] int aimingFOV;
@@ -27,7 +27,6 @@ public class PlayerController : MonoBehaviour
 
     void ChangeFOVAiming(bool isAiming)
     {
-        Debug.Log(isAiming);
         if (c_delayChangeFOV != null)
             StopCoroutine(c_delayChangeFOV);
 
@@ -40,7 +39,11 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
 
         gunCam.fieldOfView = isAiming ? aimingFOV : normalFOV;
-        mainCam.fieldOfView = isAiming ? aimingFOV : normalFOV;
-        
+
+        foreach (var cam in mainCam)
+        {
+            if (cam.gameObject.activeInHierarchy)
+                cam.fieldOfView = isAiming ? aimingFOV : normalFOV;
+        }
     }
 }
