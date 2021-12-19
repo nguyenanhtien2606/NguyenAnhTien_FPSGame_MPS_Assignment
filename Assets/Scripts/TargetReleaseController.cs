@@ -16,6 +16,7 @@ public class TargetReleaseController : MonoBehaviour
 
     [SerializeField] float timePlus = 10;
 
+    AudioSource audioSource;
 
     #region observer
     public static event Action<bool,float> UpdateReleaseTargetProcess;
@@ -35,6 +36,7 @@ public class TargetReleaseController : MonoBehaviour
     {
         gameManager = GameManager.GLOBAL;
         countTime = timeNeedToRelease;
+        audioSource = GetComponent<AudioSource>();
     }
 
     private void Update()
@@ -51,6 +53,7 @@ public class TargetReleaseController : MonoBehaviour
 
                 gameManager.UpdateTargetRelease();
                 gameManager.PlusTimeSurvival(timePlus);
+                audioSource.Play();
             }
 
             UpdateReleaseTargetProcess?.Invoke(true, ReleaseProcess);

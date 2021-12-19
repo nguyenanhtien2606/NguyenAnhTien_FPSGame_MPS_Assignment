@@ -9,8 +9,6 @@ public class PlayerController : MonoBehaviour
 
     public static PlayerController instance;
 
-    CapsuleCollider col;
-
     [SerializeField] Camera gunCam;
     [SerializeField] List<Camera> mainCam;
 
@@ -23,10 +21,17 @@ public class PlayerController : MonoBehaviour
     [Header("Player Settings")]
     [SerializeField] float PlayerHeath = 100;
 
+    [Space]
+    [SerializeField] AudioSource audioSource;
+    [SerializeField] AudioClip dieSound;
+    [SerializeField] AudioClip itemTakenSound;
+
     Coroutine c_delayChangeFOV;
     float maxPlayerHealth;
 
-    public static event Action IsDie;
+    public static event Action IsDieAction;
+
+    bool IsDied;
 
     public GameObject LookAtPoint
     {
@@ -40,7 +45,6 @@ public class PlayerController : MonoBehaviour
         if (instance == null)
             instance = this;
 
-        col = GetComponent<CapsuleCollider>();
         maxPlayerHealth = PlayerHeath;
     }
 
@@ -78,15 +82,21 @@ public class PlayerController : MonoBehaviour
 
     public void Damaged(float damage)
     {
-        if (PlayerHeath > 0)
+        if (!IsDied)
         {
-            gameManager.P_UIController.UpdatePlayerHearthSlider((PlayerHeath / maxPlayerHealth) - (damage / maxPlayerHealth));
-            PlayerHeath -= damage;
-        }
-        else
-        {
-            gunCam.gameObject.SetActive(false);
-            IsDie?.Invoke();
+            if (PlayerHeath > 0)
+            {
+                gameManager.P_UIController.UpdatePlayerHearthSlider((PlayerHeath / maxPlayerHealth) - (damage / maxPlayerHealth));
+                PlayerHeath -= damage;
+            }
+            else
+            {
+                audioSource.PlayOneShot(dieSound);
+                gunCam.enabled = false;
+                IsDieAction?.Invoke();
+
+                IsDied = true;
+            }
         }
     }
 
@@ -98,5 +108,10 @@ public class PlayerController : MonoBehaviour
 
         if (PlayerHeath > maxPlayerHealth)
             PlayerHeath = maxPlayerHealth;
+    }
+
+    public void PlayItemTakenShound()
+    {
+        audioSource.PlayOneShot(itemTakenSound);
     }
 }

@@ -65,12 +65,12 @@ public class GameManager : MonoBehaviour
 
     private void OnEnable()
     {
-        PlayerController.IsDie += PlayerDied;
+        PlayerController.IsDieAction += PlayerDied;
     }
 
     private void OnDisable()
     {
-        PlayerController.IsDie -= PlayerDied;
+        PlayerController.IsDieAction -= PlayerDied;
     }
 
     private void Update()

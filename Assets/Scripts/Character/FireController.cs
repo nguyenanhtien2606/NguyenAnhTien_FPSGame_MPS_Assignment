@@ -364,6 +364,7 @@ public class FireController : MonoBehaviour
         }
 
         UpdateTotalAmmo?.Invoke(currentGun.TotalAmmo.ToString());
+        PlayerController.instance.PlayItemTakenShound();
     }
 
 #if UNITY_ANDROID || UNITY_IPHONE

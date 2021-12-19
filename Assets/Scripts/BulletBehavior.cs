@@ -27,7 +27,7 @@ public class BulletBehavior : BulletAndCasing
 
         if (collision.transform.CompareTag("Enemy"))
         {
-            Debug.Log("damage: " + CurrentGun.Damage);
+            //Debug.Log("damage: " + CurrentGun.Damage);
             collision.gameObject.GetComponent<EnemyController>().Damaged(CurrentGun.Damage);
         }
 
