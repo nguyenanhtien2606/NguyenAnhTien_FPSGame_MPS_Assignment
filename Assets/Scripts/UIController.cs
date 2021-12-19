@@ -13,8 +13,10 @@ public class UIController : MonoBehaviour
 
     [Space]
     [SerializeField] Text limitTimeSurvivalTxt;
-    [SerializeField] Text timeSurvivalRecordTxt;
-    [SerializeField] Text roundTxt;
+    [SerializeField] Text targetReleaseTxt;
+
+    [Space]
+    [SerializeField] Image targetProcessImg;
 
     private void OnEnable()
     {
@@ -22,6 +24,8 @@ public class UIController : MonoBehaviour
         FireController.UpdateWeaponAvatar += UpdateWeaponAvatar;
         FireController.UpdateCurrentAmmo += UpdateBulletRemain;
         FireController.UpdateTotalAmmo += UpdateTotalBullet;
+
+        TargetReleaseController.UpdateReleaseTargetProcess += UpdateReleaseTargetProcess;
     }
 
     private void OnDisable()
@@ -30,6 +34,8 @@ public class UIController : MonoBehaviour
         FireController.UpdateWeaponAvatar -= UpdateWeaponAvatar;
         FireController.UpdateCurrentAmmo -= UpdateBulletRemain;
         FireController.UpdateTotalAmmo -= UpdateTotalBullet;
+
+        TargetReleaseController.UpdateReleaseTargetProcess -= UpdateReleaseTargetProcess;
     }
 
     public void UpdateWeaponName(string _weaponName)
@@ -62,13 +68,17 @@ public class UIController : MonoBehaviour
         limitTimeSurvivalTxt.text = timeTxt;
     }
 
-    public void UpdateTimeSurvivalRecord(string timeTxt)
+    public void UpdateTargetRelease(string timeTxt)
     {
-        timeSurvivalRecordTxt.text = timeTxt;
+        targetReleaseTxt.text = timeTxt;
     }
 
-    public void UpdatePlayingRound(string playingRoundTxt)
+    void UpdateReleaseTargetProcess(bool isActive, float process)
     {
-        roundTxt.text = playingRoundTxt;
+        Debug.Log("aaaaaaaaaaaaaaaaaaaaaaa");
+        targetProcessImg.gameObject.SetActive(isActive);
+
+        if (isActive)
+            targetProcessImg.fillAmount = process;
     }
 }

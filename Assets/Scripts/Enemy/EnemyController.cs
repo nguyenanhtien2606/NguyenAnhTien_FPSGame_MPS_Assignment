@@ -22,11 +22,14 @@ public class EnemyController : MonoBehaviour
     float lastTimeToDamage;
     bool IsDeath;
 
-    Coroutine c_missTarget;
+    Coroutine c_missPlayer;
 
     PlayerController playerController;
 
-    public GameObject Target
+    Vector3 originPos;
+    bool isReturnOriginPos;
+
+    public Vector3 Target
     {
         get;
         private set;
@@ -44,18 +47,27 @@ public class EnemyController : MonoBehaviour
 
         navMeshAgent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
+
+        originPos = gameObject.transform.position;
     }
 
     private void Update()
     {
-        if (Target != null)
+        if (Target != Vector3.zero)
         {
-            transform.LookAt(Target.transform.position);
+            transform.LookAt(Target);
             transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0); //lock x,z axis
             FollowTarget();
-        }
 
-        anim.SetBool("IsWaking", Target != null);
+            if (navMeshAgent.remainingDistance < 0.2f && isReturnOriginPos)
+            {
+                anim.SetBool("IsWaking", false);
+            }
+            else
+            {
+                anim.SetBool("IsWaking", true);
+            }
+        } 
     }
 
     public void Damaged(int damage)
@@ -77,8 +89,22 @@ public class EnemyController : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             Debug.Log("I've found you!!!");
+            if (c_missPlayer != null)
+                StopCoroutine(c_missPlayer);
+
             playerController = other.gameObject.GetComponent<PlayerController>();
-            Target = playerController.LookAtPoint;
+            isReturnOriginPos = false;
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            if (playerController == null)
+                playerController = other.gameObject.GetComponent<PlayerController>();
+
+            Target = playerController.LookAtPoint.transform.position;
         }
     }
 
@@ -86,10 +112,10 @@ public class EnemyController : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            if (c_missTarget != null)
-                StopCoroutine(c_missTarget);
+            if (c_missPlayer != null)
+                StopCoroutine(c_missPlayer);
 
-            c_missTarget = StartCoroutine(C_MissTarget());
+            c_missPlayer = StartCoroutine(C_MissPlayer());
         }
     }
 
@@ -108,21 +134,21 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    IEnumerator C_MissTarget()
+    IEnumerator C_MissPlayer()
     {
         yield return new WaitForSeconds(timeToMissTarget);
-        Target = null;
-        
-        navMeshAgent.isStopped = true;
+
         Debug.Log("Yeah you escaped!");
+
+        Target = originPos;
+        isReturnOriginPos = true;
     }
 
     void FollowTarget()
     {
         if (!IsDeath && Target != null)
         {
-            navMeshAgent.isStopped = false;
-            navMeshAgent.SetDestination(Target.transform.position);
+            navMeshAgent.SetDestination(Target);
         }
     }
 }
