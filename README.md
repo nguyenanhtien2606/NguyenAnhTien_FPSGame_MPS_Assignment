@@ -2,6 +2,7 @@
 ------------------
 **Note**
 - Select a mobile platform: Android or iOS
+- Input full support in physical device
   
 **Video Demo Gameplay**
 
